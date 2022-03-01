@@ -29,7 +29,7 @@ RUN set -eux; \
     \
     [ ! -d "$WORK_DIR" ]; \
     {{ # 创建项目运行目录 -}}
-    mkdir -p "$WORK_DIR""; \
+    mkdir -p "$WORK_DIR"; \
     chown www-data:www-data "$WORK_DIR"; \
     chmod 777 "$WORK_DIR"
 

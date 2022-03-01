@@ -30,7 +30,7 @@ RUN set -eux; \
     mkdir -p "$PHP_INI_DIR/conf.d"; \
     \
     [ ! -d "$WORK_DIR" ]; \
-    mkdir -p "$WORK_DIR""; \
+    mkdir -p "$WORK_DIR"; \
     chown www-data:www-data "$WORK_DIR"; \
     chmod 777 "$WORK_DIR"
 
