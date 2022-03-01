@@ -17,49 +17,99 @@ ENV PHPIZE_DEPS \
 		pkgconf \
 		re2c
 
+ENV WORK_DIR /var/www/html
 ENV PHP_INI_DIR /usr/local/etc/php
 
-
 RUN set -eux; \
-    
     sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories; \
     apk update && apk upgrade; \
     apk add --no-cache curl; \
     \
-    
     adduser -u 82 -D -S -G www-data www-data; \
     \
-    
     mkdir -p "$PHP_INI_DIR/conf.d"; \
     \
-    [ ! -d /var/www/html ]; \
-    
-    mkdir -p /var/www/html; \
-    chown www-data:www-data /var/www/html; \
-    chmod 777 /var/www/html; \
+    [ ! -d "$WORK_DIR" ]; \
+    mkdir -p "$WORK_DIR""; \
+    chown www-data:www-data "$WORK_DIR"; \
+    chmod 777 "$WORK_DIR";
 
+ENV PHP_BUILD_DIR /usr/src/php
 ENV PHP_VERSION 7.4.28
-ENV PHP_URL=https://www.php.net/distributions/php-7.4.28.tar.xz PHP_ASC_URL=https://www.php.net/distributions/php-7.4.28.tar.xz.asc
-ENV PHP_SHA256 9cc3b6f6217b60582f78566b3814532c4b71d517876c25013ae51811e65d8fce
+ENV PHP_URL="https://www.php.net/distributions/php-7.4.28.tar.xz" PHP_ASC_URL="https://www.php.net/distributions/php-7.4.28.tar.xz.asc"
+ENV PHP_SHA256="9cc3b6f6217b60582f78566b3814532c4b71d517876c25013ae51811e65d8fce"
 ENV GPG_KEYS 42670A7FE4D0441C8E4632349E4FDC074A4EF02D 5A52880781F755608BF815FC910DEB46F53EA312
 
-# 下载php压缩包；php加密验证包；对下载对php压缩包进行验证
-# 使用记忆功能，添加编译环境，并安装编译所需库；记忆功能以便去掉打包过程中才会使用的包，从而缩减最终容器尺寸
-
-
-
 RUN set -eux; \
-    
-    apk add --no-cache --virtual .fetch-deps curl gnupg; \
+    apk add --no-cache --virtual .fetch-deps curl gnupg tar; \
     \
     cd /tmp; \
     curl -fsSL -o php.tar.xz "$PHP_URL"; \
     \
+    if [ -n "$PHP_SHA256" ]; then \
+        echo "$PHP_SHA256 *php.tar.xz" | sha256sum -c;
+    fi; \
+    \
+    if [ -n "$PHP_ASC_URL" ]; then \
+        curl -fsSL -o php.tar.xz.asc "$PHP_ASC_URL";\
+        \
+        export GNUPGHOME="$(mktemp -d)"; \
+        \
+        for key in $GPG_KEYS; do \
+            gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
+        done; \
+        gpg --batch --verify php.tar.xz.asc php.tar.xz; \
+        \
+        gpgconf --kill all; \
+        rm -rf "$GNUPGHOME"; \
+    fi; \
+    \
+    mkdir -p "$PHP_BUILD_DIR"; \
+    tar -Jxf /tmp/php.tar.xz -C "$PHP_BUILD_DIR" --strip-components=1; \
+    \
+    apk del --no-network .fetch-deps;
 
+ENV PHP_DIR /usr/php
+ENV PHP_CONF_DIR /etc/php
 
-# 添加安装临时环境，并安装编译所需库；编译php源码并安装
 RUN set -eux; \
-    apk add --no-cache --virtual .fetch-deps gnupg; \
+    apk add --no-cache --virtual .build-deps; \
+
+    cd "$PHP_BUILD_DIR"; \
+    \
+    gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+    \
+    ./configure \
+            --build="$gnuArch" \
+            \
+            --prefix="$PHP_DIR" \
+            \
+            --disable-option-checking \
+            \
+            --enable-fpm \
+            --with-fpm-user=www-data \
+            --with-fpm-group=www-data \
+            --disable-cgi \
+            \
+            --with-config-file-path="$PHP_INI_DIR" \
+            --disable-short-tags \
+            \
+            --enable-bcmath \
+            --with-openssl \
+            --with-password-argon2 \
+            --with-mhash \
+            --with-sodium=shared \
+            --enable-mbstring \
+            --enable-exif \
+            --with-curl \
+    ; \
+    make -j "$(nproc)";\
+    make install; \
+    make clean; \
+    \
+    cp php-ini.* "$PHP_CONF_DIR" \
+    \
+    apk del --no-network .build-deps;
 
 WORKDIR /var/www/html
 

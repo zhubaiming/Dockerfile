@@ -49,7 +49,7 @@ function append_string(str)
 	# append_string 的内容都是非逻辑部分，均使用 jq 输出成带有 "" 包裹的内容
 	str = jq_escape(str)
 
-	append(out)
+	append(str)
 }
 
 # 处理非直接输出内容的格式
@@ -99,17 +99,26 @@ BEGIN {
     OPEN = "{{"
     CLOSE = "}}"
     CLOSE_EAT_EOL = "-" CLOSE ORS
+    OPEN_EAT_EOL = OPEN " #"
 
     agg_text = ""
+    agg_note = ""
     agg_jq = ""
     # 用于保存拼接后的全文内容
     jq_expr = ""
-
 }
 
 # 运行中
 {
     line = $0 ORS
+
+    if (agg_note || index(line, OPEN_EAT_EOL)) {
+        agg_note = agg_note line
+        if (index(line, CLOSE_EAT_EOL)) {
+            agg_note = ""
+        }
+        next
+    }
 
     i = 0
     if (agg_jq || (i = index(line, OPEN))) {
@@ -133,7 +142,7 @@ BEGIN {
             agg_jq = substr(agg_jq, i + length(OPEN))
             if (match(agg_jq, CLOSE_EAT_EOL)) {
                 i = RSTART
-                CL = RLENGTH - 1
+                CL = RLENGTH
             } else {
                 i = index(agg_jq, CLOSE)
                 CL = length(CLOSE)
@@ -158,6 +167,7 @@ BEGIN {
 END {
     # 将最后一次出现执行符 OPEN 后的内容全部添加到全局内容之中
     append_string(agg_text)
+    agg_text = ""
 
     jq_expr = ".[env.version] | (\n" jq_expr "\n)"
 

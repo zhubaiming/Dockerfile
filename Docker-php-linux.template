@@ -35,8 +35,8 @@ RUN set -eux; \
 
 ENV PHP_BUILD_DIR /usr/src/php
 ENV PHP_VERSION {{.version}}
-ENV PHP_URL={{.url}} PHP_ASC_URL={{.ascUrl}}
-ENV PHP_SHA256 {{.sha256}}
+ENV PHP_URL="{{.url}}" PHP_ASC_URL="{{.ascUrl}}"
+ENV PHP_SHA256="{{.sha256}}"
 ENV GPG_KEYS {{.gpgKeys}}
 
 {{ # 使用记忆功能，记忆功能以便去掉打包过程中才会使用的包，从而缩减最终容器尺寸
