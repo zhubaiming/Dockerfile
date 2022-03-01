@@ -31,7 +31,7 @@ RUN set -eux; \
     {{ # 创建项目运行目录 -}}
     mkdir -p "$WORK_DIR""; \
     chown www-data:www-data "$WORK_DIR"; \
-    chmod 777 "$WORK_DIR";
+    chmod 777 "$WORK_DIR"
 
 ENV PHP_BUILD_DIR /usr/src/php
 ENV PHP_VERSION {{.version}}
@@ -82,7 +82,7 @@ RUN set -eux; \
     tar -Jxf /tmp/php.tar.xz -C "$PHP_BUILD_DIR" --strip-components=1; \
     \
     {{ # 删除记忆功能 -}}
-    apk del --no-network .fetch-deps;
+    apk del --no-network .fetch-deps
 
 ENV PHP_DIR /usr/php
 ENV PHP_CONF_DIR /etc/php
@@ -177,7 +177,7 @@ RUN set -eux; \
     \
     cp php-ini.* "$PHP_CONF_DIR" \
     \
-    apk del --no-network .build-deps;
+    apk del --no-network .build-deps
 
 WORKDIR /var/www/html
 
