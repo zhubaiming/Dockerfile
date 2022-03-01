@@ -1,0 +1,11 @@
+FROM
+
+ENV
+
+RUN
+
+WORKDIR
+
+EXPOSE 9000
+
+CMD
