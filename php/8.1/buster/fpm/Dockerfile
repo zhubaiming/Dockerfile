@@ -32,7 +32,7 @@ RUN set -eux; \
     [ ! -d "$WORK_DIR" ]; \
     mkdir -p "$WORK_DIR""; \
     chown www-data:www-data "$WORK_DIR"; \
-    chmod 777 "$WORK_DIR";
+    chmod 777 "$WORK_DIR"
 
 ENV PHP_BUILD_DIR /usr/src/php
 ENV PHP_VERSION 8.1.3
@@ -67,7 +67,7 @@ RUN set -eux; \
     mkdir -p "$PHP_BUILD_DIR"; \
     tar -Jxf /tmp/php.tar.xz -C "$PHP_BUILD_DIR" --strip-components=1; \
     \
-    apk del --no-network .fetch-deps;
+    apk del --no-network .fetch-deps
 
 ENV PHP_DIR /usr/php
 ENV PHP_CONF_DIR /etc/php
@@ -109,7 +109,7 @@ RUN set -eux; \
     \
     cp php-ini.* "$PHP_CONF_DIR" \
     \
-    apk del --no-network .build-deps;
+    apk del --no-network .build-deps
 
 WORKDIR /var/www/html
 
