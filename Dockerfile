@@ -1,10 +1,31 @@
-# 使用多阶段构建生产镜�?
+# 使用多阶段构建生产镜
+
+ARG IMAGE=alpine
+ARG IMAGE_VERSION=3.18
+
 # 第一阶段，命名为 build
-FROM make:alpine-3.18 as build
+FROM ${IMAGE}:${IMAGE_VERSION} as build
 
 ARG NGINX_VERSION=1.24.0
 
 RUN set -x \
+    && apk update \
+    && apk add --no-cache \
+        gcc \
+        libc-dev \
+        make \
+        openssl-dev \
+        pcre2-dev \
+        zlib-dev \
+        linux-headers \
+        libxslt-dev \
+        gd-dev \
+        geoip-dev \
+        libedit-dev \
+        bash \
+        alpine-sdk \
+        findutils \
+        tzdata \
     && tempDir="$(mktemp -d)" \
     && chown nobody:nobody $tempDir \
     && cd ${tempDir} \
@@ -41,12 +62,10 @@ RUN set -x \
         --without-http_autoindex_module \
         --without-http_memcached_module \
     && make -j4 \
-    && make install \
-    && apk update \
-    && apk add tzdata
+    && make install
 
 # 第二阶段
-FROM alpine:3.18
+FROM ${IMAGE}:${IMAGE_VERSION}
 
 ARG TZ=Asia/Shanghai
 
