@@ -1,2 +1,9 @@
 .DS_Store
 .idea
+conf.d/*.conf
+!conf.d/default.conf
+nginx.conf
+/*.yml
+*.crt
+*.key
+*.pem
